@@ -3,547 +3,723 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galeria Virtual de Pintura</title>
+    <title>Galeria de Arte Premium - Coleção Virtual</title>
     <style>
+        :root {
+            --primary: #a78bfa;
+            --primary-dark: #7c3aed;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #ec4899;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: white;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
             min-height: 100vh;
+            line-height: 1.5;
         }
 
+        /* --- Header & Controls --- */
         .header {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2rem 1rem;
+            padding: 1.5rem 1rem;
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(to right, #a78bfa, #ec4899, #60a5fa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .controls {
-            max-width: 1200px;
-            margin: 0 auto;
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+        }
+
+        .controls-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .main-controls {
             display: flex;
             gap: 1rem;
             align-items: center;
-            justify-content: center;
             flex-wrap: wrap;
         }
 
-        .search-box {
+        .search-container {
             position: relative;
             flex: 1;
-            max-width: 400px;
+            min-width: 280px;
         }
 
-        .search-box input {
+        .search-container svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        .search-container input {
             width: 100%;
             padding: 0.75rem 1rem 0.75rem 2.5rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
             color: white;
-            font-size: 1rem;
+            transition: all 0.2s;
         }
 
-        .search-box input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .search-box input:focus {
+        .search-container input:focus {
             outline: none;
-            border-color: #a78bfa;
-            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.15);
         }
 
-        .view-buttons {
+        .filter-bar {
             display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scrollbar-width: none;
+        }
+
+        .filter-bar::-webkit-scrollbar { display: none; }
+
+        .btn-pill {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+            color: var(--text-main);
+            font-size: 0.875rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
             gap: 0.5rem;
         }
 
-        .btn {
-            padding: 0.75rem 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 0.5rem;
+        .btn-pill:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-pill.active {
+            background: var(--primary);
+            border-color: var(--primary);
             color: white;
+            font-weight: 600;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .icon-btn {
+            padding: 0.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            border-radius: 0.5rem;
             cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1rem;
+            transition: all 0.2s;
+            display: flex;
         }
 
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .icon-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--primary);
         }
 
-        .btn.active {
-            background: #a78bfa;
-        }
-
-        .counter {
-            text-align: center;
-            margin-top: 1rem;
-            color: #d1d5db;
-        }
-
+        /* --- Main Content --- */
         .main {
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
 
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-        }
-
-        .spinner {
-            width: 4rem;
-            height: 4rem;
-            border: 4px solid rgba(167, 139, 250, 0.3);
-            border-top-color: #a78bfa;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
         }
 
         .gallery-list {
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            max-width: 1000px;
+            margin: 0 auto;
         }
 
+        /* --- Painting Cards --- */
         .painting-card {
-            position: relative;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(5px);
-            border-radius: 0.75rem;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.25rem;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeIn 0.5s ease backwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .painting-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            border-color: rgba(167, 139, 250, 0.5);
-            box-shadow: 0 20px 40px rgba(167, 139, 250, 0.2);
+            transform: translateY(-8px);
+            border-color: rgba(167, 139, 250, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
         }
 
-        .painting-card-grid {
-            aspect-ratio: 1;
+        .card-img-wrapper {
+            position: relative;
+            aspect-ratio: 4/5;
+            overflow: hidden;
+            cursor: zoom-in;
         }
 
-        .painting-card-grid img {
+        .card-img-wrapper img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .painting-card:hover img {
+        .painting-card:hover .card-img-wrapper img {
             transform: scale(1.1);
         }
 
-        .card-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
-            display: flex;
-            align-items: flex-end;
-            padding: 1rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .painting-card:hover .card-overlay {
-            opacity: 1;
-        }
-
-        .card-number {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.875rem;
-        }
-
-        .painting-card-list {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-        }
-
-        .list-thumbnail {
-            width: 100px;
-            height: 100px;
-            border-radius: 0.5rem;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        .list-info {
-            flex: 1;
-        }
-
-        .list-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .list-number {
-            color: #9ca3af;
-        }
-
-        .lightbox {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-
-        .lightbox.active {
-            display: flex;
-        }
-
-        .lightbox-close {
+        .card-fav-btn {
             position: absolute;
             top: 1rem;
             right: 1rem;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
             border: none;
-            color: white;
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 10;
-        }
-
-        .lightbox-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(90deg);
-        }
-
-        .lightbox-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 10;
-        }
-
-        .lightbox-nav:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .lightbox-prev {
-            left: 1rem;
-        }
-
-        .lightbox-next {
-            right: 1rem;
-        }
-
-        .lightbox-zoom {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            display: flex;
-            gap: 0.5rem;
-            z-index: 10;
-        }
-
-        .zoom-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
             width: 2.5rem;
             height: 2.5rem;
             border-radius: 50%;
-            font-size: 1.25rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .zoom-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .zoom-level {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.5rem 1rem;
-            border-radius: 1.5rem;
-            font-size: 0.875rem;
             display: flex;
             align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 5;
+        }
+
+        .card-fav-btn.active {
+            color: var(--accent);
+            background: rgba(236, 72, 153, 0.2);
+        }
+
+        .card-content {
+            padding: 1.25rem;
+        }
+
+        .card-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-main);
+        }
+
+        .card-meta {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* --- List Mode Variation --- */
+        .painting-card-list {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .painting-card-list .card-img-wrapper {
+            width: 120px;
+            height: 120px;
+            border-radius: 0.75rem;
+            flex-shrink: 0;
+            aspect-ratio: 1;
+        }
+
+        /* --- Lightbox Refined --- */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.98);
+            z-index: 1000;
+            display: none;
+            grid-template-columns: 1fr 350px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .lightbox.active { display: grid; }
+
+        .lightbox-viewer {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .lightbox-sidebar {
+            background: rgba(15, 23, 42, 0.5);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
         }
 
         .lightbox-image-container {
-            max-width: 90vw;
-            max-height: 85vh;
-            overflow: auto;
+            max-width: 100%;
+            max-height: 100%;
+            transition: transform 0.3s ease-out;
+            cursor: grab;
         }
+
+        .lightbox-image-container:active { cursor: grabbing; }
 
         .lightbox-image {
             max-width: 100%;
             max-height: 85vh;
             border-radius: 0.5rem;
-            transition: transform 0.3s;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
         }
 
-        .lightbox-info {
+        .close-btn {
             position: absolute;
-            bottom: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            border-radius: 2rem;
-            text-align: center;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1010;
         }
 
-        .lightbox-title {
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover { background: var(--primary); }
+        .nav-prev { left: 1.5rem; }
+        .nav-next { right: 1.5rem; }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-badge {
+            background: rgba(167, 139, 250, 0.1);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             font-weight: 600;
-            margin-bottom: 0.25rem;
         }
 
-        .lightbox-counter {
-            font-size: 0.875rem;
-            color: #9ca3af;
-        }
-
-        .no-results {
+        /* --- Empty State --- */
+        .empty-state {
             text-align: center;
-            padding: 5rem 1rem;
-            color: #9ca3af;
-            font-size: 1.25rem;
+            padding: 6rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 4rem;
+            height: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 1024px) {
+            .lightbox { grid-template-columns: 1fr; }
+            .lightbox-sidebar { display: none; }
         }
 
         @media (max-width: 768px) {
-            .title {
-                font-size: 1.75rem;
-            }
-
-            .gallery-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 1rem;
-            }
-
-            .lightbox-nav {
-                width: 2.5rem;
-                height: 2.5rem;
-                font-size: 1.25rem;
-            }
+            .header { padding: 1rem; }
+            .title { font-size: 1.5rem; }
+            .nav-btn { width: 2.5rem; height: 2.5rem; }
+            .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
         }
     </style>
 </head>
 <body>
+
     <header class="header">
-        <h1 class="title">🎨 Galeria Virtual de Pintura</h1>
-        <div class="controls">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Pesquisar pinturas...">
+        <div class="header-content">
+            <div class="brand">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#a78bfa" />
+                            <stop offset="100%" style="stop-color:#f472b6" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <h1 class="title">Galeria de Arte</h1>
             </div>
-            <div class="view-buttons">
-                <button class="btn active" id="gridBtn" onclick="setViewMode('grid')">📱 Grelha</button>
-                <button class="btn" id="listBtn" onclick="setViewMode('list')">📋 Lista</button>
+
+            <div class="controls-wrapper">
+                <div class="main-controls">
+                    <div class="search-container">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="searchInput" placeholder="Procurar por título, técnica ou ID...">
+                    </div>
+                    
+                    <div class="view-toggle">
+                        <button class="icon-btn active" id="gridBtn" onclick="setViewMode('grid')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        </button>
+                        <button class="icon-btn" id="listBtn" onclick="setViewMode('list')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        </button>
+                    </div>
+
+                    <select id="sortSelect" onchange="handleSort()" class="btn-pill" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1rem;">
+                        <option value="id-asc">Nº Ordem (Asc)</option>
+                        <option value="id-desc">Nº Ordem (Desc)</option>
+                    </select>
+                </div>
+
+                <div class="filter-bar" id="filterBar">
+                    <button class="btn-pill active" onclick="setFilter('all')">Todas as Obras</button>
+                    <button class="btn-pill" onclick="setFilter('fav')">❤️ Favoritas</button>
+                    <button class="btn-pill" onclick="setFilter('Abstrato')">Abstrato</button>
+                    <button class="btn-pill" onclick="setFilter('Clássico')">Clássico</button>
+                    <button class="btn-pill" onclick="setFilter('Moderno')">Moderno</button>
+                    <button class="btn-pill" onclick="setFilter('Paisagem')">Paisagem</button>
+                </div>
             </div>
         </div>
-        <p class="counter" id="counter"></p>
     </header>
 
     <main class="main">
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>A carregar galeria...</p>
+        <div id="galleryContainer" class="gallery-grid">
+            <!-- As pinturas serão injetadas aqui -->
         </div>
-        <div class="gallery-grid" id="gallery" style="display: none;"></div>
     </main>
 
+    <!-- Lightbox -->
     <div class="lightbox" id="lightbox">
-        <button class="lightbox-close" onclick="closeLightbox()">×</button>
-        <button class="lightbox-nav lightbox-prev" onclick="navigatePainting(-1)">‹</button>
-        <button class="lightbox-nav lightbox-next" onclick="navigatePainting(1)">›</button>
+        <button class="close-btn" onclick="closeLightbox()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
         
-        <div class="lightbox-zoom">
-            <button class="zoom-btn" onclick="zoomOut()">-</button>
-            <button class="zoom-btn" onclick="zoomIn()">+</button>
-            <div class="zoom-level" id="zoomLevel">100%</div>
+        <div class="lightbox-viewer">
+            <button class="nav-btn nav-prev" onclick="navigate(-1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            
+            <div class="lightbox-image-container" id="zoomContainer">
+                <img src="" alt="" id="lightboxImg" class="lightbox-image">
+            </div>
+
+            <button class="nav-btn nav-next" onclick="navigate(1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
         </div>
 
-        <div class="lightbox-image-container" id="imageContainer">
-            <img class="lightbox-image" id="lightboxImage" src="" alt="">
-        </div>
+        <aside class="lightbox-sidebar">
+            <div class="stats-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+                <span id="lbIndex">Obra 0 de 0</span>
+            </div>
 
-        <div class="lightbox-info">
-            <div class="lightbox-title" id="lightboxTitle"></div>
-            <div class="lightbox-counter" id="lightboxCounter"></div>
-        </div>
+            <div>
+                <p class="info-label">Título da Obra</p>
+                <h2 class="info-value" id="lbTitle">Pintura Exemplo</h2>
+                
+                <p class="info-label">Categoria</p>
+                <p class="info-value" id="lbCat">Moderno</p>
+
+                <p class="info-label">Técnica & Materiais</p>
+                <p class="info-value" id="lbTech">Óleo sobre tela, espátula</p>
+
+                <p class="info-label">Ano de Criação</p>
+                <p class="info-value" id="lbYear">2023</p>
+            </div>
+
+            <button class="btn-pill" id="lbFavBtn" style="justify-content: center; padding: 1rem; margin-top: auto; font-size: 1rem;">
+                <!-- Ícone via JS -->
+            </button>
+        </aside>
     </div>
 
     <script>
-        let paintings = [];
+        // Configurações e Dados
+        let allPaintings = [];
         let filteredPaintings = [];
-        let currentIndex = 0;
+        let currentIdx = 0;
         let viewMode = 'grid';
-        let zoomLevel = 1;
+        let currentFilter = 'all';
+        let favorites = JSON.parse(localStorage.getItem('art_favorites') || '[]');
+        let zoomScale = 1;
 
-        // Carregar pinturas
-        async function loadPaintings() {
-            const loadedPaintings = [];
-            
+        // Categorias e técnicas para simulação
+        const CATEGORIES = ['Abstrato', 'Clássico', 'Moderno', 'Paisagem', 'Retrato'];
+        const TECHNIQUES = ['Óleo sobre tela', 'Acrílico', 'Aguarela', 'Técnica Mista'];
+
+        // Inicialização
+        function init() {
+            // Gerar base de dados simulada (1 a 155)
             for (let i = 1; i <= 155; i++) {
-                const filename = `./tela (${i}).jpg`;
-                loadedPaintings.push({
+                allPaintings.push({
                     id: i,
-                    filename: filename,
-                    title: `Pintura ${i}`,
-                    url: filename
+                    title: `Obra de Arte #${i}`,
+                    url: `./tela (${i}).jpg`,
+                    category: CATEGORIES[i % CATEGORIES.length],
+                    technique: TECHNIQUES[i % TECHNIQUES.length],
+                    year: 2020 + (i % 5),
+                    description: "Uma exploração profunda de cor e forma que reflete a visão contemporânea do artista sobre a natureza humana."
                 });
             }
             
-            paintings = loadedPaintings;
-            filteredPaintings = [...paintings];
-            
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('gallery').style.display = viewMode === 'grid' ? 'grid' : 'flex';
-            
-            renderGallery();
-            updateCounter();
+            applyFilters();
+            setupEventListeners();
         }
 
-        // Renderizar galeria
-        function renderGallery() {
-            const gallery = document.getElementById('gallery');
-            gallery.innerHTML = '';
-            gallery.className = viewMode === 'grid' ? 'gallery-grid' : 'gallery-list';
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                applyFilters();
+            });
+
+            // Teclas de atalho
+            document.addEventListener('keydown', (e) => {
+                if (!document.getElementById('lightbox').classList.contains('active')) return;
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowLeft') navigate(-1);
+                if (e.key === 'ArrowRight') navigate(1);
+            });
+        }
+
+        // Lógica de Filtros e Ordenação
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('#filterBar .btn-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.includes(filter) || (filter === 'all' && btn.textContent === 'Todas as Obras'));
+            });
+            applyFilters();
+        }
+
+        function handleSort() {
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const sortVal = document.getElementById('sortSelect').value;
+
+            filteredPaintings = allPaintings.filter(p => {
+                const matchesSearch = p.title.toLowerCase().includes(searchTerm) || 
+                                    p.category.toLowerCase().includes(searchTerm) || 
+                                    p.id.toString() === searchTerm;
+                
+                let matchesCategory = true;
+                if (currentFilter === 'fav') matchesCategory = favorites.includes(p.id);
+                else if (currentFilter !== 'all') matchesCategory = p.category === currentFilter;
+
+                return matchesSearch && matchesCategory;
+            });
+
+            // Ordenação
+            if (sortVal === 'id-desc') filteredPaintings.sort((a, b) => b.id - a.id);
+            else filteredPaintings.sort((a, b) => a.id - b.id);
+
+            render();
+        }
+
+        // Renderização da Interface
+        function render() {
+            const container = document.getElementById('galleryContainer');
+            container.className = viewMode === 'grid' ? 'gallery-grid' : 'gallery-list';
+            container.innerHTML = '';
 
             if (filteredPaintings.length === 0) {
-                gallery.innerHTML = '<div class="no-results">Nenhuma pintura encontrada</div>';
-                gallery.style.display = 'block';
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <h3>Nenhum resultado encontrado</h3>
+                        <p>Tente ajustar os seus filtros ou a sua pesquisa.</p>
+                    </div>
+                `;
                 return;
             }
 
-            filteredPaintings.forEach(function(painting, index) {
+            filteredPaintings.forEach((p, index) => {
+                const isFav = favorites.includes(p.id);
                 const card = document.createElement('div');
-                card.className = 'painting-card painting-card-' + viewMode;
-                card.onclick = function() { openLightbox(index); };
+                card.className = `painting-card ${viewMode === 'list' ? 'painting-card-list' : ''}`;
+                card.style.animationDelay = `${index * 0.02}s`;
 
-                if (viewMode === 'grid') {
-                    card.innerHTML = '<img src="' + painting.url + '" alt="' + painting.title + '">' +
-                        '<div class="card-overlay">' +
-                            '<div>' +
-                                '<h3>' + painting.title + '</h3>' +
-                                '<p style="font-size: 0.875rem; color: #d1d5db;">Clique para ampliar</p>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="card-number">#' + painting.id + '</div>';
-                } else {
-                    card.innerHTML = '<img class="list-thumbnail" src="' + painting.url + '" alt="' + painting.title + '">' +
-                        '<div class="list-info">' +
-                            '<div class="list-title">' + painting.title + '</div>' +
-                            '<div class="list-number">Número: ' + painting.id + '</div>' +
-                        '</div>' +
-                        '<span style="font-size: 1.5rem; color: #9ca3af;">›</span>';
-                }
-
-                gallery.appendChild(card);
+                card.innerHTML = `
+                    <div class="card-img-wrapper" onclick="openLightbox(${index})">
+                        <img src="${p.url}" alt="${p.title}" loading="lazy">
+                        <button class="card-fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav(event, ${p.id})">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">${p.category}</span>
+                        <h3 class="card-title">${p.title}</h3>
+                        <div class="card-meta">
+                            <span>Ano: ${p.year}</span>
+                            <span>#${p.id}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
             });
         }
 
-        // Pesquisa
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase();
-            filteredPaintings = paintings.filter(function(p) {
-                return p.title.toLowerCase().includes(term) || p.id.toString().includes(term);
-            });
-            renderGallery();
-            updateCounter();
-        });
-
-        // Mudar modo de visualização
         function setViewMode(mode) {
             viewMode = mode;
             document.getElementById('gridBtn').classList.toggle('active', mode === 'grid');
             document.getElementById('listBtn').classList.toggle('active', mode === 'list');
-            document.getElementById('gallery').style.display = mode === 'grid' ? 'grid' : 'flex';
-            renderGallery();
+            render();
         }
 
-        // Atualizar contador
-        function updateCounter() {
-            const counter = document.getElementById('counter');
-            const count = filteredPaintings.length;
-            counter.textContent = count + ' ' + (count === 1 ? 'pintura' : 'pinturas');
+        // Lógica de Favoritos
+        function toggleFav(e, id) {
+            e.stopPropagation();
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(fid => fid !== id);
+            } else {
+                favorites.push(id);
+            }
+            localStorage.setItem('art_favorites', JSON.stringify(favorites));
+            
+            // Re-renderizar botão no lightbox se estiver aberto
+            const lbBtn = document.getElementById('lbFavBtn');
+            if (document.getElementById('lightbox').classList.contains('active')) {
+                updateLightboxFavBtn(id);
+            }
+            
+            render();
         }
 
         // Lightbox
         function openLightbox(index) {
-            currentIndex = index;
-            const painting = filteredPaintings[index];
+            currentIdx = index;
+            const p = filteredPaintings[index];
+            const lb = document.getElementById('lightbox');
             
-            document.getElementById('lightbox').classList.add('active');
-            document.getElementById('lightboxImage').src = painting.url;
-            document.getElementById('lightboxTitle').textContent = painting.title;
-            document.getElementById('lightboxCounter').textContent = (index + 1) + ' de ' + filteredPaintings.length;
+            document.getElementById('lightboxImg').src = p.url;
+            document.getElementById('lbTitle').textContent = p.title;
+            document.getElementById('lbCat').textContent = p.category;
+            document.getElementById('lbTech').textContent = p.technique;
+            document.getElementById('lbYear').textContent = p.year;
+            document.getElementById('lbIndex').textContent = `Obra ${index + 1} de ${filteredPaintings.length}`;
             
-            zoomLevel = 1;
-            updateZoom();
+            updateLightboxFavBtn(p.id);
+            
+            lb.classList.add('active');
             document.body.style.overflow = 'hidden';
+            zoomScale = 1;
+            updateZoom();
+        }
+
+        function updateLightboxFavBtn(id) {
+            const isFav = favorites.includes(id);
+            const btn = document.getElementById('lbFavBtn');
+            btn.className = `btn-pill ${isFav ? 'active' : ''}`;
+            btn.onclick = (e) => toggleFav(e, id);
+            btn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="margin-right: 8px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                ${isFav ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
+            `;
         }
 
         function closeLightbox() {
@@ -551,44 +727,22 @@
             document.body.style.overflow = 'auto';
         }
 
-        function navigatePainting(direction) {
-            currentIndex = (currentIndex + direction + filteredPaintings.length) % filteredPaintings.length;
-            openLightbox(currentIndex);
-        }
-
-        function zoomIn() {
-            zoomLevel = Math.min(zoomLevel + 0.25, 3);
-            updateZoom();
-        }
-
-        function zoomOut() {
-            zoomLevel = Math.max(zoomLevel - 0.25, 0.5);
-            updateZoom();
+        function navigate(dir) {
+            currentIdx = (currentIdx + dir + filteredPaintings.length) % filteredPaintings.length;
+            openLightbox(currentIdx);
         }
 
         function updateZoom() {
-            document.getElementById('lightboxImage').style.transform = 'scale(' + zoomLevel + ')';
-            document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+            document.getElementById('zoomContainer').style.transform = `scale(${zoomScale})`;
         }
 
-        // Atalhos de teclado
-        document.addEventListener('keydown', function(e) {
-            if (!document.getElementById('lightbox').classList.contains('active')) return;
-            
-            if (e.key === 'Escape') closeLightbox();
-            if (e.key === 'ArrowRight') navigatePainting(1);
-            if (e.key === 'ArrowLeft') navigatePainting(-1);
-            if (e.key === '+' || e.key === '=') zoomIn();
-            if (e.key === '-') zoomOut();
+        // Fechar ao clicar fora
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target.className === 'lightbox-viewer') closeLightbox();
         });
 
-        // Fechar lightbox ao clicar fora da imagem
-        document.getElementById('lightbox').addEventListener('click', function(e) {
-            if (e.target.id === 'lightbox') closeLightbox();
-        });
-
-        // Iniciar
-        loadPaintings();
+        // Iniciar App
+        window.onload = init;
     </script>
 </body>
 </html>
