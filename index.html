@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria Virtual de Pintura</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #a78bfa, #ec4899, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+        }
+
+        .view-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn.active {
+            background: #a78bfa;
+        }
+
+        .counter {
+            text-align: center;
+            margin-top: 1rem;
+            color: #d1d5db;
+        }
+
+        .main {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+        }
+
+        .spinner {
+            width: 4rem;
+            height: 4rem;
+            border: 4px solid rgba(167, 139, 250, 0.3);
+            border-top-color: #a78bfa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gallery-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .painting-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .painting-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: rgba(167, 139, 250, 0.5);
+            box-shadow: 0 20px 40px rgba(167, 139, 250, 0.2);
+        }
+
+        .painting-card-grid {
+            aspect-ratio: 1;
+        }
+
+        .painting-card-grid img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .painting-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+            display: flex;
+            align-items: flex-end;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .painting-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .card-number {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .painting-card-list {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .list-thumbnail {
+            width: 100px;
+            height: 100px;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .list-info {
+            flex: 1;
+        }
+
+        .list-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .list-number {
+            color: #9ca3af;
+        }
+
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .lightbox-prev {
+            left: 1rem;
+        }
+
+        .lightbox-next {
+            right: 1rem;
+        }
+
+        .lightbox-zoom {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .zoom-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .zoom-level {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 1.5rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .lightbox-image-container {
+            max-width: 90vw;
+            max-height: 85vh;
+            overflow: auto;
+        }
+
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 0.5rem;
+            transition: transform 0.3s;
+        }
+
+        .lightbox-info {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-radius: 2rem;
+            text-align: center;
+        }
+
+        .lightbox-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .lightbox-counter {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 5rem 1rem;
+            color: #9ca3af;
+            font-size: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 1.75rem;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+
+            .lightbox-nav {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1 class="title">🎨 Galeria Virtual de Pintura</h1>
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Pesquisar pinturas...">
+            </div>
+            <div class="view-buttons">
+                <button class="btn active" id="gridBtn" onclick="setViewMode('grid')">📱 Grelha</button>
+                <button class="btn" id="listBtn" onclick="setViewMode('list')">📋 Lista</button>
+            </div>
+        </div>
+        <p class="counter" id="counter"></p>
+    </header>
+
+    <main class="main">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>A carregar galeria...</p>
+        </div>
+        <div class="gallery-grid" id="gallery" style="display: none;"></div>
+    </main>
+
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <button class="lightbox-nav lightbox-prev" onclick="navigatePainting(-1)">‹</button>
+        <button class="lightbox-nav lightbox-next" onclick="navigatePainting(1)">›</button>
+        
+        <div class="lightbox-zoom">
+            <button class="zoom-btn" onclick="zoomOut()">-</button>
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <div class="zoom-level" id="zoomLevel">100%</div>
+        </div>
+
+        <div class="lightbox-image-container" id="imageContainer">
+            <img class="lightbox-image" id="lightboxImage" src="" alt="">
+        </div>
+
+        <div class="lightbox-info">
+            <div class="lightbox-title" id="lightboxTitle"></div>
+            <div class="lightbox-counter" id="lightboxCounter"></div>
+        </div>
+    </div>
+
+    <script>
+        let paintings = [];
+        let filteredPaintings = [];
+        let currentIndex = 0;
+        let viewMode = 'grid';
+        let zoomLevel = 1;
+
+        // Carregar pinturas
+        async function loadPaintings() {
+            const loadedPaintings = [];
+            
+            for (let i = 1; i <= 155; i++) {
+                const filename = `./tela (${i}).jpg`;
+                loadedPaintings.push({
+                    id: i,
+                    filename: filename,
+                    title: `Pintura ${i}`,
+                    url: filename
+                });
+            }
+            
+            paintings = loadedPaintings;
+            filteredPaintings = [...paintings];
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('gallery').style.display = viewMode === 'grid' ? 'grid' : 'flex';
+            
+            renderGallery();
+            updateCounter();
+        }
+
+        // Renderizar galeria
+        function renderGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            gallery.className = viewMode === 'grid' ? 'gallery-grid' : 'gallery-list';
+
+            if (filteredPaintings.length === 0) {
+                gallery.innerHTML = '<div class="no-results">Nenhuma pintura encontrada</div>';
+                gallery.style.display = 'block';
+                return;
+            }
+
+            filteredPaintings.forEach(function(painting, index) {
+                const card = document.createElement('div');
+                card.className = 'painting-card painting-card-' + viewMode;
+                card.onclick = function() { openLightbox(index); };
+
+                if (viewMode === 'grid') {
+                    card.innerHTML = '<img src="' + painting.url + '" alt="' + painting.title + '">' +
+                        '<div class="card-overlay">' +
+                            '<div>' +
+                                '<h3>' + painting.title + '</h3>' +
+                                '<p style="font-size: 0.875rem; color: #d1d5db;">Clique para ampliar</p>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="card-number">#' + painting.id + '</div>';
+                } else {
+                    card.innerHTML = '<img class="list-thumbnail" src="' + painting.url + '" alt="' + painting.title + '">' +
+                        '<div class="list-info">' +
+                            '<div class="list-title">' + painting.title + '</div>' +
+                            '<div class="list-number">Número: ' + painting.id + '</div>' +
+                        '</div>' +
+                        '<span style="font-size: 1.5rem; color: #9ca3af;">›</span>';
+                }
+
+                gallery.appendChild(card);
+            });
+        }
+
+        // Pesquisa
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            filteredPaintings = paintings.filter(function(p) {
+                return p.title.toLowerCase().includes(term) || p.id.toString().includes(term);
+            });
+            renderGallery();
+            updateCounter();
+        });
+
+        // Mudar modo de visualização
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('gridBtn').classList.toggle('active', mode === 'grid');
+            document.getElementById('listBtn').classList.toggle('active', mode === 'list');
+            document.getElementById('gallery').style.display = mode === 'grid' ? 'grid' : 'flex';
+            renderGallery();
+        }
+
+        // Atualizar contador
+        function updateCounter() {
+            const counter = document.getElementById('counter');
+            const count = filteredPaintings.length;
+            counter.textContent = count + ' ' + (count === 1 ? 'pintura' : 'pinturas');
+        }
+
+        // Lightbox
+        function openLightbox(index) {
+            currentIndex = index;
+            const painting = filteredPaintings[index];
+            
+            document.getElementById('lightbox').classList.add('active');
+            document.getElementById('lightboxImage').src = painting.url;
+            document.getElementById('lightboxTitle').textContent = painting.title;
+            document.getElementById('lightboxCounter').textContent = (index + 1) + ' de ' + filteredPaintings.length;
+            
+            zoomLevel = 1;
+            updateZoom();
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function navigatePainting(direction) {
+            currentIndex = (currentIndex + direction + filteredPaintings.length) % filteredPaintings.length;
+            openLightbox(currentIndex);
+        }
+
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel + 0.25, 3);
+            updateZoom();
+        }
+
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel - 0.25, 0.5);
+            updateZoom();
+        }
+
+        function updateZoom() {
+            document.getElementById('lightboxImage').style.transform = 'scale(' + zoomLevel + ')';
+            document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+        }
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (!document.getElementById('lightbox').classList.contains('active')) return;
+            
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') navigatePainting(1);
+            if (e.key === 'ArrowLeft') navigatePainting(-1);
+            if (e.key === '+' || e.key === '=') zoomIn();
+            if (e.key === '-') zoomOut();
+        });
+
+        // Fechar lightbox ao clicar fora da imagem
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target.id === 'lightbox') closeLightbox();
+        });
+
+        // Iniciar
+        loadPaintings();
+    </script>
+</body>
+</html>
